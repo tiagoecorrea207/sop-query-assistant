@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  db:
+    image: ankane/pgvector
+    environment:
+      POSTGRES_DB:       sopdb
+      POSTGRES_USER:     user
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    depends_on: [db]
+    ports:
+      - "8000:8000"
+    environment:
+      SKIP_CLASSIFICATION: "1"
+      SKIP_SEED: "1"
+      ANTHROPIC_MODEL: claude-sonnet-5
+      ANTHROPIC_API_KEY:       ${ANTHROPIC_API_KEY}
+      LANGCHAIN_TRACING_V2:    "true"
+      LANGCHAIN_API_KEY:       ${LANGCHAIN_API_KEY}
+      LANGCHAIN_PROJECT:       sop-query-assistant
+      DATABASE_URL:            postgresql+psycopg2://user:pass@db:5432/sopdb
+      TOP_K:                   "6"
+      CHUNK_SIZE:              "800"
+      CHUNK_OVERLAP:           "150"
+      SOP_SIMILARITY_THRESHOLD: "0.85"
+    volumes:
+      - ./backend/sops:/app/sops
+    command: >
+      sh -c "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build: ./frontend
+    depends_on: [backend]
+    ports:
+      - "3000:3000"
+    environment:
+      # These values are compiled into the browser bundle, so they must be
+      # reachable from the host browser rather than the Docker network.
+      REACT_APP_API_URL: http://localhost:8000
+      REACT_APP_WS_URL:  ws://localhost:8000
+
+volumes:
+  pgdata:
