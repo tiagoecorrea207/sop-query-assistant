@@ -46,6 +46,8 @@ docker-compose up --build
 # Frontend: http://localhost:3000
 # API docs: http://localhost:8000/docs
 ```
+## Screen
+<img width="1263" height="691" alt="image" src="https://github.com/user-attachments/assets/78b9814b-4fd4-4f69-a43f-72f0b67228bb" />
 
 ## Manual (no Docker)
 
